@@ -32,7 +32,8 @@ const errorHandler = require("./middlewares/errorMiddleware");
 app.use(errorHandler);
 
 // Start Server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+const PORT = process.env.PORT || "0000";
+const AppUrl = process.env.APP_URL || "http://localhost";
+ app.listen(PORT, () => {
+    console.log(`Server running on ${AppUrl}:${PORT}`);
+  });
