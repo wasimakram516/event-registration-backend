@@ -47,7 +47,7 @@ exports.getRegistrations = asyncHandler(async (req, res) => {
 
   const registrations = await Registration.find({
     eventId: { $in: admin.events.map((event) => event._id) },
-  }).populate("eventId", "name date venue");
+  }).populate("event", "name date venue");
 
   res.status(200).json(registrations);
 });
