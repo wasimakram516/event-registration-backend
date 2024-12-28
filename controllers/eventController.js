@@ -15,12 +15,15 @@ exports.getEventDetails = asyncHandler(async (req, res) => {
 
 // Create event and assign to admin
 exports.createEvent = asyncHandler(async (req, res) => {
-  const { name, date, venue, description, logoUrl } = req.body;
+  const { name, date, venue, description } = req.body;
 
   // Validate required fields
   if (!name || !date || !venue) {
     return res.status(400).json({ success: false, message: "Missing required fields" });
   }
+
+  // Check if a logo was uploaded
+  const logoUrl = req.file ? req.file.path : null;
 
   // Create a new event
   const newEvent = await Event.create({ name, date, venue, description, logoUrl });
@@ -42,23 +45,26 @@ exports.createEvent = asyncHandler(async (req, res) => {
     success: true,
     message: "Event created and assigned to admin successfully",
     event: newEvent,
-    registrationLink, // Include the link in the response
+    registrationLink,
   });
 });
 
 // Update event
 exports.updateEvent = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, date, venue, description, logoUrl } = req.body;
+  const { name, date, venue, description } = req.body;
 
   const admin = await Admin.findById(req.user.id);
   if (!admin.events.includes(id)) {
     return res.status(403).json({ success: false, message: "You are not authorized to update this event" });
   }
 
+  // Check if a new logo was uploaded
+  const logoUrl = req.file ? req.file.path : undefined;
+
   const updatedEvent = await Event.findByIdAndUpdate(
     id,
-    { name, date, venue, description, logoUrl },
+    { name, date, venue, description, ...(logoUrl && { logoUrl }) },
     { new: true }
   );
 
