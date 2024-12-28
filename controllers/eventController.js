@@ -17,12 +17,15 @@ exports.getEventDetails = asyncHandler(async (req, res) => {
 exports.createEvent = asyncHandler(async (req, res) => {
   const { name, date, venue, description, logoUrl } = req.body;
 
+  // Validate required fields
   if (!name || !date || !venue) {
     return res.status(400).json({ success: false, message: "Missing required fields" });
   }
 
+  // Create a new event
   const newEvent = await Event.create({ name, date, venue, description, logoUrl });
 
+  // Find the admin and assign the event
   const admin = await Admin.findById(req.user.id);
   if (!admin) {
     return res.status(404).json({ success: false, message: "Admin not found" });
@@ -31,10 +34,15 @@ exports.createEvent = asyncHandler(async (req, res) => {
   admin.events.push(newEvent._id);
   await admin.save();
 
+  // Generate the registration link
+  const registrationLink = `${process.env.BASE_URL}/register/${newEvent._id}`;
+
+  // Return response with the registration link
   res.status(201).json({
     success: true,
     message: "Event created and assigned to admin successfully",
     event: newEvent,
+    registrationLink, // Include the link in the response
   });
 });
 
