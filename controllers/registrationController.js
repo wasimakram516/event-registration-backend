@@ -59,7 +59,7 @@ exports.getRegistrationsByEvent = asyncHandler(async (req, res) => {
 
   // Check if the id is a valid MongoDB ObjectId
   if (!mongoose.Types.ObjectId.isValid(eventId)) {
-    return res.status(400).json({ success: false, message: "Invalid event" });
+    return res.status(400).json({ success: false, message: "Invalid Event" });
   }
 
   const registrations = await Registration.find({ eventId }).populate("eventId", "name date venue");

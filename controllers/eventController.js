@@ -20,7 +20,7 @@ exports.getSingleEvent = asyncHandler(async (req, res) => {
 
   // Check if the id is a valid MongoDB ObjectId
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ success: false, message: "Invalid URL." });
+    return res.status(400).json({ success: false, message: "Invalid Event" });
   }
 
   // Find the event by ID
