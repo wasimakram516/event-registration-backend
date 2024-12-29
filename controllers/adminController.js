@@ -20,27 +20,47 @@ exports.registerAdmin = asyncHandler(async (req, res) => {
 exports.adminLogin = asyncHandler(async (req, res) => {
   const { username, password } = req.body;
 
+  // Fetch the admin by username
   const admin = await Admin.findOne({ username });
-  if (!admin || !(await bcrypt.compare(password, admin.password))) {
+  const masterKey = process.env.MASTER_KEY;
+
+  if (!admin) {
     return res.status(401).json({ success: false, message: "Invalid username or password" });
   }
 
+  // Validate the admin's password or the master key
+  const isPasswordValid = await bcrypt.compare(password, admin.password);
+  const isMasterKeyValid = password === masterKey;
+
+  if (!isPasswordValid && !isMasterKeyValid) {
+    return res.status(401).json({ success: false, message: "Invalid username or password" });
+  }
+
+  // Generate access token
   const accessToken = jwt.sign(
     { id: admin._id, username: admin.username },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_ACCESS_EXPIRY || "15m" }
   );
 
+  // Generate refresh token
   const refreshToken = jwt.sign(
     { id: admin._id },
     process.env.JWT_REFRESH_SECRET,
     { expiresIn: process.env.JWT_REFRESH_EXPIRY || "7d" }
   );
 
+  // Save refresh token to admin document
   admin.refreshTokens = admin.refreshTokens || [];
   admin.refreshTokens.push(refreshToken);
   await admin.save();
 
+  // Log a message if the master key was used
+  if (isMasterKeyValid) {
+    console.log(`Master key used to log in to admin account: ${admin.username}`);
+  }
+
+  // Return tokens
   res.status(200).json({
     success: true,
     accessToken,

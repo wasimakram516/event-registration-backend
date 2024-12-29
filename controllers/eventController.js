@@ -17,6 +17,11 @@ exports.getEventDetails = asyncHandler(async (req, res) => {
 exports.getSingleEvent = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
+  // Check if the id is a valid MongoDB ObjectId
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ success: false, message: "Invalid URL." });
+  }
+
   // Find the event by ID
   const event = await Event.findById(id);
   if (!event) {
@@ -25,6 +30,7 @@ exports.getSingleEvent = asyncHandler(async (req, res) => {
 
   res.status(200).json(event);
 });
+
 
 // Create event and assign to admin
 exports.createEvent = asyncHandler(async (req, res) => {
@@ -67,6 +73,11 @@ exports.updateEvent = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { name, date, venue, description } = req.body;
 
+  // Check if the id is a valid MongoDB ObjectId
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ success: false, message: "Invalid event ID." });
+  }
+
   const admin = await Admin.findById(req.user.id);
   if (!admin.events.includes(id)) {
     return res.status(403).json({ success: false, message: "You are not authorized to update this event" });
@@ -91,6 +102,11 @@ exports.updateEvent = asyncHandler(async (req, res) => {
 // Delete event
 exports.deleteEvent = asyncHandler(async (req, res) => {
   const { id } = req.params;
+
+  // Check if the id is a valid MongoDB ObjectId
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ success: false, message: "Invalid event ID" });
+  }
 
   const admin = await Admin.findById(req.user.id);
   if (!admin.events.includes(id)) {

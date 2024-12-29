@@ -56,6 +56,11 @@ exports.getRegistrations = asyncHandler(async (req, res) => {
 exports.getRegistrationsByEvent = asyncHandler(async (req, res) => {
   const { eventId } = req.params;
 
+  // Check if the id is a valid MongoDB ObjectId
+  if (!mongoose.Types.ObjectId.isValid(eventId)) {
+    return res.status(400).json({ success: false, message: "Invalid event ID" });
+  }
+
   const registrations = await Registration.find({ eventId }).populate("eventId", "name date venue");
 
   if (!registrations) {
@@ -68,6 +73,11 @@ exports.getRegistrationsByEvent = asyncHandler(async (req, res) => {
 // Delete a registration by ID
 exports.deleteRegistration = asyncHandler(async (req, res) => {
   const { id } = req.params;
+
+  // Check if the id is a valid MongoDB ObjectId
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ success: false, message: "Invalid registration ID" });
+  }
 
   const registration = await Registration.findById(id);
   if (!registration) {
