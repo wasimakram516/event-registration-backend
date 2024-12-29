@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Event = require("../models/Event");
 const Admin = require("../models/Admin");
 const asyncHandler = require("../middlewares/asyncHandler");
