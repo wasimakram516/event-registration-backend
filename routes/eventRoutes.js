@@ -18,7 +18,7 @@ router.get("/", protectRoute, getEventDetails);
 router.get("/:id", getSingleEvent);
 
 // Get total number of events
-router.get("/count", protectRoute, getTotalEvents);
+router.get("/count/event", protectRoute, getTotalEvents);
 
 // Create a new event
 router.post("/", protectRoute, upload.single("logo"), createEvent);
