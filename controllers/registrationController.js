@@ -56,7 +56,7 @@ exports.getRegistrations = asyncHandler(async (req, res) => {
 exports.getRegistrationsByEvent = asyncHandler(async (req, res) => {
   const { eventId } = req.params;
 
-  const registrations = await Registration.find({ eventId }).populate("event", "name date venue");
+  const registrations = await Registration.find({ eventId }).populate("eventId", "name date venue");
 
   if (!registrations) {
     return res.status(404).json({ success: false, message: "No registrations found for this event" });
