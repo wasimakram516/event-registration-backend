@@ -10,7 +10,7 @@ const app = express();
 app.use(cors({
   origin: [
     "http://localhost:3000", // Frontend local development
-     // Frontend production URL
+     "https://eventcloud-wwds.vercel.app"// Frontend production URL
   ],
   credentials: true, // Enable if you are using cookies for authentication
   methods: ["GET", "POST", "PUT", "DELETE"], // Allowed HTTP methods
