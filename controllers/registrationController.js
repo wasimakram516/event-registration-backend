@@ -71,6 +71,22 @@ exports.getRegistrationsByEvent = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: registrations });
 });
 
+// Get total number of registrations for the logged-in admin
+exports.getTotalRegistrations = asyncHandler(async (req, res) => {
+  const admin = await Admin.findById(req.user.id).populate("events");
+
+  if (!admin) {
+    return res.status(404).json({ success: false, message: "Admin not found" });
+  }
+
+  const registrations = await Registration.find({
+    eventId: { $in: admin.events.map((event) => event._id) },
+  });
+
+  res.status(200).json({ success: true, totalRegistrations: registrations.length });
+});
+
+
 // Delete a registration by ID
 exports.deleteRegistration = asyncHandler(async (req, res) => {
   const { id } = req.params;

@@ -32,6 +32,19 @@ exports.getSingleEvent = asyncHandler(async (req, res) => {
   res.status(200).json(event);
 });
 
+// Get total number of events for the logged-in admin
+exports.getTotalEvents = asyncHandler(async (req, res) => {
+  const admin = await Admin.findById(req.user.id);
+
+  if (!admin) {
+    return res.status(404).json({ success: false, message: "Admin not found" });
+  }
+
+  const totalEvents = admin.events.length;
+
+  res.status(200).json({ success: true, totalEvents });
+});
+
 
 // Create event and assign to admin
 exports.createEvent = asyncHandler(async (req, res) => {
