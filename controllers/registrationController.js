@@ -52,6 +52,19 @@ exports.getRegistrations = asyncHandler(async (req, res) => {
   res.status(200).json(registrations);
 });
 
+// Get registrations for a specific event
+exports.getRegistrationsByEvent = asyncHandler(async (req, res) => {
+  const { eventId } = req.params;
+
+  const registrations = await Registration.find({ eventId }).populate("event", "name date venue");
+
+  if (!registrations) {
+    return res.status(404).json({ success: false, message: "No registrations found for this event" });
+  }
+
+  res.status(200).json({ success: true, data: registrations });
+});
+
 // Delete a registration by ID
 exports.deleteRegistration = asyncHandler(async (req, res) => {
   const { id } = req.params;
