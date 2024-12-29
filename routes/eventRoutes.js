@@ -14,7 +14,7 @@ const upload = require("../middlewares/cloudinaryMiddleware");
 router.get("/", protectRoute, getEventDetails);
 
 // Get a single event by ID
-router.get("/:id", protectRoute, getSingleEvent);
+router.get("/:id", getSingleEvent);
 
 // Create a new event
 router.post("/", protectRoute, upload.single("logo"), createEvent);
