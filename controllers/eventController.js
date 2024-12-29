@@ -13,6 +13,19 @@ exports.getEventDetails = asyncHandler(async (req, res) => {
   res.status(200).json(admin.events);
 });
 
+// Get a single event by ID
+exports.getSingleEvent = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  // Find the event by ID
+  const event = await Event.findById(id);
+  if (!event) {
+    return res.status(404).json({ success: false, message: "Event not found" });
+  }
+
+  res.status(200).json(event);
+});
+
 // Create event and assign to admin
 exports.createEvent = asyncHandler(async (req, res) => {
   const { name, date, venue, description } = req.body;
