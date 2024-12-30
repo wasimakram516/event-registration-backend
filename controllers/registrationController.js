@@ -13,8 +13,17 @@ exports.createRegistration = asyncHandler(async (req, res) => {
   }
 
   const eventExists = await Event.findById(eventId);
+
   if (!eventExists) {
     return res.status(404).json({ success: false, message: "Event not found" });
+  }
+
+  // Validate if the event date is in the past
+  if (new Date(eventExists.date) < new Date()) {
+    return res.status(400).json({
+      success: false,
+      message: "You cannot register for an event that has already passed",
+    });
   }
 
   const existingRegistration = await Registration.findOne({ email, eventId });

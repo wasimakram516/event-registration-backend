@@ -70,15 +70,11 @@ exports.createEvent = asyncHandler(async (req, res) => {
   admin.events.push(newEvent._id);
   await admin.save();
 
-  // Generate the registration link
-  const registrationLink = `${process.env.BASE_URL}/register/${newEvent._id}`;
-
   // Return response with the registration link
   res.status(201).json({
     success: true,
     message: "Event created and assigned to admin successfully",
     event: newEvent,
-    registrationLink,
   });
 });
 
