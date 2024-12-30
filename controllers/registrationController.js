@@ -19,7 +19,13 @@ exports.createRegistration = asyncHandler(async (req, res) => {
   }
 
   // Validate if the event date is in the past
-  if (new Date(eventExists.date) < new Date()) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Remove time portion from today's date
+
+  const eventDate = new Date(eventExists.date);
+  eventDate.setHours(0, 0, 0, 0); // Remove time portion from event date
+
+  if (eventDate < today) {
     return res.status(400).json({
       success: false,
       message: "You cannot register for an event that has already passed",
