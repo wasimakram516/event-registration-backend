@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const Event = require("../models/Event");
 const Admin = require("../models/Admin");
+const Registration = require("../models/Registration");
+
 const asyncHandler = require("../middlewares/asyncHandler");
 
 // Get all events for the logged-in admin
@@ -128,11 +130,20 @@ exports.deleteEvent = asyncHandler(async (req, res) => {
     return res.status(403).json({ success: false, message: "You are not authorized to delete this event" });
   }
 
+  const registrationsCount = await Registration.countDocuments({ eventId: id });
+  if (registrationsCount > 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Cannot delete an event with existing registrations",
+    });
+  }
+
   const deletedEvent = await Event.findByIdAndDelete(id);
   if (!deletedEvent) {
     return res.status(404).json({ success: false, message: "Event not found" });
   }
 
+  // Remove event from admin's events list
   admin.events = admin.events.filter((eventId) => eventId.toString() !== id);
   await admin.save();
 
