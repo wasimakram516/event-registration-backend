@@ -18,21 +18,21 @@ exports.createRegistration = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: "Event not found" });
   }
 
-  // Validate if the event date is in the past
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Remove time portion from today's date
-
-  const eventDate = new Date(eventExists.date);
-  eventDate.setHours(0, 0, 0, 0); // Remove time portion from event date
-
-  if (eventDate < today) {
-    return res.status(400).json({
-      success: false,
-      message: "You cannot register for an event that has already passed",
-    });
-  }
-
-  // Check if the event capacity is full
+    // Validate if the event date is in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Remove time portion from today's date
+  
+    const eventDate = new Date(eventExists.date);
+    eventDate.setHours(0, 0, 0, 0); // Remove time portion from event date
+  
+    if (eventDate < today) {
+      return res.status(400).json({
+        success: false,
+        message: "You cannot register for an event that has already passed",
+      });
+    }
+  
+    // Check if the event capacity is full
   if (eventExists.registrations >= eventExists.capacity) {
     return res.status(400).json({ 
       success: false, 
@@ -54,9 +54,8 @@ exports.createRegistration = asyncHandler(async (req, res) => {
     eventId,
   });
 
-  // Increment the registration count for the event
-  eventExists.registrations += 1;
-  await eventExists.save();
+  // Atomic increment for registrations count
+  await Event.findByIdAndUpdate(eventId, { $inc: { registrations: 1 } });
 
   res.status(201).json({
     success: true,
@@ -64,6 +63,7 @@ exports.createRegistration = asyncHandler(async (req, res) => {
     data: newRegistration,
   });
 });
+
 
 // Get all registrations (Admin-only, filtered by admin's events)
 exports.getRegistrations = asyncHandler(async (req, res) => {
@@ -138,9 +138,8 @@ exports.deleteRegistration = asyncHandler(async (req, res) => {
 
   await Registration.findByIdAndDelete(id);
 
-  // Decrement the registration count for the event
-  event.registrations = Math.max(0, event.registrations - 1);
-  await event.save();
+  // Atomic decrement for registrations count
+  await Event.findByIdAndUpdate(registration.eventId, { $inc: { registrations: -1 } });
 
   res.status(200).json({ message: "Registration deleted successfully" });
 });
