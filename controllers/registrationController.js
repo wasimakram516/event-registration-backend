@@ -32,6 +32,14 @@ exports.createRegistration = asyncHandler(async (req, res) => {
     });
   }
 
+  // Check if the event capacity is full
+  if (eventExists.registrations >= eventExists.capacity) {
+    return res.status(400).json({ 
+      success: false, 
+      message: "Event capacity is full. Registration is not allowed." 
+    });
+  }
+
   const existingRegistration = await Registration.findOne({ email, eventId });
   if (existingRegistration) {
     return res.status(409).json({ success: false, message: "User already registered for this event" });
@@ -45,6 +53,10 @@ exports.createRegistration = asyncHandler(async (req, res) => {
     company,
     eventId,
   });
+
+  // Increment the registration count for the event
+  eventExists.registrations += 1;
+  await eventExists.save();
 
   res.status(201).json({
     success: true,
@@ -101,12 +113,10 @@ exports.getTotalRegistrations = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, totalRegistrations: registrations.length });
 });
 
-
 // Delete a registration by ID
 exports.deleteRegistration = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  // Check if the id is a valid MongoDB ObjectId
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ success: false, message: "Invalid registration ID" });
   }
@@ -116,11 +126,21 @@ exports.deleteRegistration = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: "Registration not found" });
   }
 
+  const event = await Event.findById(registration.eventId);
+  if (!event) {
+    return res.status(404).json({ success: false, message: "Event not found" });
+  }
+
   const admin = await Admin.findById(req.user.id).populate("events");
-  if (!admin.events.some((event) => event._id.toString() === registration.eventId.toString())) {
+  if (!admin.events.some((e) => e._id.toString() === registration.eventId.toString())) {
     return res.status(403).json({ success: false, message: "You are not authorized to delete this registration" });
   }
 
   await Registration.findByIdAndDelete(id);
+
+  // Decrement the registration count for the event
+  event.registrations = Math.max(0, event.registrations - 1);
+  await event.save();
+
   res.status(200).json({ message: "Registration deleted successfully" });
 });

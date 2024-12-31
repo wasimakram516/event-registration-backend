@@ -18,12 +18,10 @@ exports.getEventDetails = asyncHandler(async (req, res) => {
 exports.getSingleEvent = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  // Check if the id is a valid MongoDB ObjectId
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ success: false, message: "Invalid Event" });
   }
 
-  // Find the event by ID
   const event = await Event.findById(id);
   if (!event) {
     return res.status(404).json({ success: false, message: "Event not found" });
@@ -45,21 +43,24 @@ exports.getTotalEvents = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, totalEvents });
 });
 
-
 // Create event and assign to admin
 exports.createEvent = asyncHandler(async (req, res) => {
-  const { name, date, venue, description } = req.body;
+  const { name, date, venue, description, capacity } = req.body;
 
   // Validate required fields
-  if (!name || !date || !venue) {
+  if (!name || !date || !venue || !capacity) {
     return res.status(400).json({ success: false, message: "Missing required fields" });
+  }
+
+  if (isNaN(Number(capacity)) || Number(capacity) <= 0) {
+    return res.status(400).json({ success: false, message: "Capacity must be a positive number" });
   }
 
   // Check if a logo was uploaded
   const logoUrl = req.file ? req.file.path : null;
 
   // Create a new event
-  const newEvent = await Event.create({ name, date, venue, description, logoUrl });
+  const newEvent = await Event.create({ name, date, venue, description, logoUrl, capacity });
 
   // Find the admin and assign the event
   const admin = await Admin.findById(req.user.id);
@@ -81,11 +82,15 @@ exports.createEvent = asyncHandler(async (req, res) => {
 // Update event
 exports.updateEvent = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, date, venue, description } = req.body;
+  const { name, date, venue, description, capacity } = req.body;
 
   // Check if the id is a valid MongoDB ObjectId
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ success: false, message: "Invalid event ID." });
+  }
+
+  if (capacity && (isNaN(Number(capacity)) || Number(capacity) <= 0)) {
+    return res.status(400).json({ success: false, message: "Capacity must be a positive number" });
   }
 
   const admin = await Admin.findById(req.user.id);
@@ -98,7 +103,7 @@ exports.updateEvent = asyncHandler(async (req, res) => {
 
   const updatedEvent = await Event.findByIdAndUpdate(
     id,
-    { name, date, venue, description, ...(logoUrl && { logoUrl }) },
+    { name, date, venue, description, ...(capacity && { capacity }), ...(logoUrl && { logoUrl }) },
     { new: true }
   );
 
