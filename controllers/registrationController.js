@@ -8,43 +8,59 @@ const asyncHandler = require("../middlewares/asyncHandler");
 exports.createRegistration = asyncHandler(async (req, res) => {
   const { firstName, lastName, phone, email, company, eventId } = req.body;
 
+  // Validate required fields
   if (!firstName || !lastName || !phone || !email || !eventId) {
-    return res.status(400).json({ success: false, message: "Missing required fields" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Missing required fields" });
   }
 
+  // Check if the event exists
   const eventExists = await Event.findById(eventId);
-
   if (!eventExists) {
-    return res.status(404).json({ success: false, message: "Event not found" });
+    return res
+      .status(404)
+      .json({ success: false, message: "Event not found" });
   }
 
-    // Validate if the event date is in the past
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Remove time portion from today's date
-  
-    const eventDate = new Date(eventExists.date);
-    eventDate.setHours(0, 0, 0, 0); // Remove time portion from event date
-  
-    if (eventDate < today) {
-      return res.status(400).json({
-        success: false,
-        message: "You cannot register for an event that has already passed",
-      });
-    }
-  
-    // Check if the event capacity is full
-  if (eventExists.registrations >= eventExists.capacity) {
-    return res.status(400).json({ 
-      success: false, 
-      message: "Event capacity is full. Registration is not allowed." 
+  // Validate if the event date is in the past
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Remove time portion from today's date
+  const eventDate = new Date(eventExists.date);
+  eventDate.setHours(0, 0, 0, 0); // Remove time portion from event date
+
+  if (eventDate < today) {
+    return res.status(400).json({
+      success: false,
+      message: "You cannot register for an event that has already passed",
     });
   }
 
-  const existingRegistration = await Registration.findOne({ email, eventId });
-  if (existingRegistration) {
-    return res.status(409).json({ success: false, message: "User already registered for this event" });
+  // Check if the event capacity is full
+  if (eventExists.registrations >= eventExists.capacity) {
+    return res.status(400).json({
+      success: false,
+      message: "Event capacity is full. Registration is not allowed.",
+    });
   }
 
+  // Check if the user already exists either by email or phone
+  const existingRegistration = await Registration.findOne({
+    $or: [{ email }, { phone }],
+    eventId,
+  });
+
+  if (existingRegistration) {
+    return res
+      .status(409)
+      .json({
+        success: false,
+        message:
+          "User already registered for this event using the provided email or phone number.",
+      });
+  }
+
+  // Create a new registration
   const newRegistration = await Registration.create({
     firstName,
     lastName,
@@ -63,7 +79,6 @@ exports.createRegistration = asyncHandler(async (req, res) => {
     data: newRegistration,
   });
 });
-
 
 // Get all registrations (Admin-only, filtered by admin's events)
 exports.getRegistrations = asyncHandler(async (req, res) => {

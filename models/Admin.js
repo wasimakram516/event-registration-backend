@@ -4,7 +4,8 @@ const bcrypt = require("bcryptjs");
 const AdminSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  refreshTokens: [{ type: String }], // Store refresh tokens
+  role: { type: String, enum: ["admin", "superadmin"], default: "admin" },
+  refreshTokens: [{ type: String }],
   events: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
 });
 

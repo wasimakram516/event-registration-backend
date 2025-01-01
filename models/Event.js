@@ -6,8 +6,8 @@ const EventSchema = new mongoose.Schema({
   venue: { type: String, required: true },
   description: { type: String },
   logoUrl: { type: String },
-  capacity: { type: Number, required: true, default: 100 }, // Maximum capacity for the event
-  registrations: { type: Number, default: 0 }, // Count of current registrations
+  capacity: { type: Number, required: true, default: 100 },
+  registrations: { type: Number, default: 0 },
 });
 
 module.exports = mongoose.model("Event", EventSchema);

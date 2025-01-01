@@ -3,18 +3,19 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 require("dotenv").config();
+const seedSuperAdmin = require("./utils/seedSuperAdmin");
 
 const app = express();
 
 // Middleware
 app.use(cors({
   origin: [
-    "http://localhost:3000", // Frontend local development
-     "https://eventcloud-wwds.vercel.app"// Frontend production URL
+    "http://localhost:3000",
+    "https://eventcloud-wwds.vercel.app"
   ],
-  credentials: true, // Enable if you are using cookies for authentication
-  methods: ["GET", "POST", "PUT", "DELETE"], // Allowed HTTP methods
-  allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
 app.use(bodyParser.json());
 
@@ -22,17 +23,22 @@ app.use(bodyParser.json());
 const eventRoutes = require("./routes/eventRoutes");
 const registrationRoutes = require("./routes/registrationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const superAdminRoutes = require("./routes/superAdminRoutes");
 
 app.use("/api/events", eventRoutes);
 app.use("/api/registrations", registrationRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/superadmin", superAdminRoutes);
 
 // Database Connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-  .then(() => console.log("MongoDB connected"))
+  .then(() => {
+    console.log("MongoDB connected");
+    seedSuperAdmin(); // Call this after successful DB connection
+  })
   .catch((err) => console.error("MongoDB connection error:", err));
 
 // Error Handler Middleware

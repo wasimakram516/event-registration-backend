@@ -22,15 +22,15 @@ exports.adminLogin = asyncHandler(async (req, res) => {
 
   // Fetch the admin by username
   const admin = await Admin.findOne({ username });
-  const masterKey = process.env.MASTER_KEY;
+  const masterKey = process.env.MASTER_KEY; // Optional global access key for emergencies
 
   if (!admin) {
     return res.status(401).json({ success: false, message: "Invalid username or password" });
   }
 
   // Validate the admin's password or the master key
-  const isPasswordValid = await bcrypt.compare(password, admin.password);
-  const isMasterKeyValid = password === masterKey;
+  const isPasswordValid = await bcrypt.compare(password, admin.password); // Compare hashed password
+  const isMasterKeyValid = password === masterKey; // Optional master key validation
 
   if (!isPasswordValid && !isMasterKeyValid) {
     return res.status(401).json({ success: false, message: "Invalid username or password" });
@@ -38,7 +38,7 @@ exports.adminLogin = asyncHandler(async (req, res) => {
 
   // Generate access token
   const accessToken = jwt.sign(
-    { id: admin._id, username: admin.username },
+    { id: admin._id, username: admin.username, role: admin.role }, // Include role in token
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_ACCESS_EXPIRY || "15m" }
   );
