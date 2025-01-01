@@ -133,12 +133,30 @@ exports.updateRegistrationInfo = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { firstName, lastName, phone, email, company } = req.body;
 
+  // Validate registration ID
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res
       .status(400)
       .json({ success: false, message: "Invalid registration ID." });
   }
 
+  // Check if another registration exists with the same phone or email
+  if (phone || email) {
+    const existingRegistration = await Registration.findOne({
+      $or: [{ phone }, { email }],
+      _id: { $ne: id }, // Exclude the current registration being updated
+    });
+
+    if (existingRegistration) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "A registration with the same phone or email already exists. Update not allowed.",
+      });
+    }
+  }
+
+  // Prepare updates
   const updates = {};
   if (firstName) updates.firstName = firstName;
   if (lastName) updates.lastName = lastName;
@@ -146,18 +164,20 @@ exports.updateRegistrationInfo = asyncHandler(async (req, res) => {
   if (email) updates.email = email;
   if (company) updates.company = company;
 
+  // Update registration
   const registration = await Registration.findByIdAndUpdate(id, updates, {
     new: true,
   });
+
   if (!registration) {
     return res
       .status(404)
-      .json({ success: false, message: "Registration not found" });
+      .json({ success: false, message: "Registration not found." });
   }
 
   res.status(200).json({
     success: true,
-    message: "Registration updated successfully",
+    message: "Registration updated successfully.",
     registration,
   });
 });
