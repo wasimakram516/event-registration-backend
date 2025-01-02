@@ -54,18 +54,54 @@ exports.updateAdminInfo = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { username, password } = req.body;
 
+  // Validate admin ID
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res
       .status(400)
       .json({ success: false, message: "Invalid admin ID." });
   }
 
+  // Validate input
   if (!username && !password) {
     return res
       .status(400)
-      .json({ success: false, message: "No updates provided" });
+      .json({ success: false, message: "No updates provided." });
   }
 
+  const errors = {};
+
+  // Validate username
+  if (username) {
+    if (username.length < 4) {
+      errors.username = "Username must be at least 4 characters long.";
+    } else if (/\s/.test(username)) {
+      errors.username = "Username should not contain spaces.";
+    } else if (!/^[a-zA-Z0-9]+$/.test(username)) {
+      errors.username = "Username should only contain alphanumeric characters.";
+    }
+  }
+
+  // Validate password
+  if (password) {
+    const passwordRules = {
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /\d/.test(password),
+      specialChar: /[@$!%*?&]/.test(password),
+    };
+
+    if (!Object.values(passwordRules).every((rule) => rule)) {
+      errors.password =
+        "Password must include at least 8 characters, an uppercase letter, a lowercase letter, a number, and a special character.";
+    }
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({ success: false, errors });
+  }
+
+  // Prepare updates
   const updates = {};
   if (username) updates.username = username;
   if (password) updates.password = password;
@@ -73,11 +109,12 @@ exports.updateAdminInfo = asyncHandler(async (req, res) => {
   const admin = await Admin.findByIdAndUpdate(id, updates, {
     new: true,
   }).select("-password");
+
   if (!admin) {
-    return res.status(404).json({ success: false, message: "Admin not found" });
+    return res.status(404).json({ success: false, message: "Admin not found." });
   }
 
-  res.status(200).json({ success: true, message: "Admin info updated", admin });
+  res.status(200).json({ success: true, message: "Admin info updated.", admin });
 });
 
 // Update event details (Super Admin only)

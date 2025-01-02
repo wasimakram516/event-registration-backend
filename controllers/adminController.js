@@ -7,13 +7,55 @@ const asyncHandler = require("../middlewares/asyncHandler");
 exports.registerAdmin = asyncHandler(async (req, res) => {
   const { username, password } = req.body;
 
+  const errors = {};
+
+  // Validate username
+  if (!username) {
+    errors.username = "Username is required.";
+  } else if (username.length < 4) {
+    errors.username = "Username must be at least 4 characters long.";
+  } else if (/\s/.test(username)) {
+    errors.username = "Username should not contain spaces.";
+  } else if (!/^[a-zA-Z0-9]+$/.test(username)) {
+    errors.username = "Username should only contain alphanumeric characters.";
+  }
+
+  // Validate password
+  if (!password) {
+    errors.password = "Password is required.";
+  } else {
+    const passwordRules = {
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /\d/.test(password),
+      specialChar: /[@$!%*?&]/.test(password),
+    };
+
+    if (!Object.values(passwordRules).every((rule) => rule)) {
+      errors.password =
+        "Password must include at least 8 characters, an uppercase letter, a lowercase letter, a number, and a special character.";
+    }
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({ success: false, errors });
+  }
+
+  // Check for existing admin
   const existingAdmin = await Admin.findOne({ username });
   if (existingAdmin) {
-    return res.status(400).json({ success: false, message: "Admin username already exists" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Admin username already exists." });
   }
 
   const newAdmin = await Admin.create({ username, password });
-  res.status(201).json({ message: "Admin registered successfully", admin: newAdmin.username });
+  res.status(201).json({
+    success: true,
+    message: "Admin registered successfully.",
+    admin: newAdmin.username,
+  });
 });
 
 // Admin login
